@@ -92,7 +92,7 @@ class TgUploader:
                         os.rename(up_path, new_path)
                         up_path = new_path
                     self.sent_msg = self.sent_msg.reply_video(video=up_path,
-                                                              quote=True,
+                                                              quote=False,
                                                               caption=cap_mono,
                                                               parse_mode="html",
                                                               duration=duration,
@@ -105,7 +105,7 @@ class TgUploader:
                 elif filee.upper().endswith(AUDIO_SUFFIXES):
                     duration , artist, title = get_media_info(up_path)
                     self.sent_msg = self.sent_msg.reply_audio(audio=up_path,
-                                                              quote=True,
+                                                              quote=False,
                                                               caption=cap_mono,
                                                               parse_mode="html",
                                                               duration=duration,
@@ -116,7 +116,7 @@ class TgUploader:
                                                               progress=self.upload_progress)
                 elif filee.upper().endswith(IMAGE_SUFFIXES):
                     self.sent_msg = self.sent_msg.reply_photo(photo=up_path,
-                                                              quote=True,
+                                                              quote=False,
                                                               caption=cap_mono,
                                                               parse_mode="html",
                                                               disable_notification=True,
@@ -131,21 +131,19 @@ class TgUploader:
                             os.remove(thumb)
                         return
                 self.sent_msg = self.sent_msg.reply_document(document=up_path,
-                                                             quote=True,
+                                                             quote=False,
                                                              thumb=thumb,
                                                              caption=cap_mono,
                                                              parse_mode="html",
                                                              disable_notification=True,
                                                              progress=self.upload_progress)
         except FloodWait as f:
-            LOGGER.info(str(f))
-            time.sleep(f.x)
+            LOGGER.warning(str(f))
+            time.sleep(f.x * 1.5)
         except RPCError as e:
-            LOGGER.error(str(e) + str(up_path))
+            LOGGER.error(f"RPCError: {e} File: {up_path}")
         except Exception as err:
-            LOGGER.info(str(err))
-            self.is_cancelled = True
-            self.__listener.onUploadError(str(err))
+            LOGGER.error(f"{err} File: {up_path}")
         if self.thumb is None and thumb is not None and os.path.lexists(thumb):
             os.remove(thumb)
         if not self.is_cancelled:

@@ -34,10 +34,8 @@ cookies = {"PHPSESSID": PHPSESSID, "crypt": CRYPT}
 
 def direct_link_generator(link: str):
     """ direct links generator """
-    if not link:
-        raise DirectDownloadLinkException("No links found!")
-    elif 'youtube.com' in link or 'youtu.be' in link:
-        raise DirectDownloadLinkException(f"Use /{BotCommands.WatchCommand} to mirror Youtube link\nUse /{BotCommands.ZipWatchCommand} to make zip of Youtube playlist")
+    if 'youtube.com' in link or 'youtu.be' in link:
+        raise DirectDownloadLinkException(f"ERROR: Use /{BotCommands.WatchCommand} to mirror Youtube link\nUse /{BotCommands.ZipWatchCommand} to make zip of Youtube playlist")
     elif 'zippyshare.com' in link:
         return zippy_share(link)
     elif 'yadi.sk' in link or 'disk.yandex.com' in link:
@@ -71,6 +69,8 @@ def direct_link_generator(link: str):
     elif 'naniplay.nanime.biz' in link:
         return fembed(link)
     elif 'naniplay.com' in link:
+        return fembed(link)
+    elif 'mm9842.com' in link:
         return fembed(link)
     elif 'layarkacaxxi.icu' in link:
         return fembed(link)
@@ -458,7 +458,11 @@ def gdtot(url: str) -> str:
                'accept-language': 'en-IN,en-GB;q=0.9,en-US;q=0.8,en;q=0.7'}
 
     r1 = requests.get(url, headers=headers, cookies=cookies).content
-    s1 = BeautifulSoup(r1, 'html.parser').find('button', id="down").get('onclick').split("'")[1]
+    s1 = BeautifulSoup(r1, 'html.parser').find('button', id="down")
+    if s1 is not None:
+        s1 = s1.get('onclick').split("'")[1]
+    else:
+        raise DirectDownloadLinkException("ERROR: Check Your GDTot Link Maybe Not Found !")
     headers['referer'] = url
     s2 = BeautifulSoup(requests.get(s1, headers=headers, cookies=cookies).content, 'html.parser').find('meta').get('content').split('=',1)[1]
     headers['referer'] = s1

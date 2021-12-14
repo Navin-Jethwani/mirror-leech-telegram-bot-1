@@ -11,7 +11,7 @@ from telegram import ParseMode, InlineKeyboardMarkup
 from telegram.ext import CommandHandler
 
 from wserver import start_server_async
-from bot import bot, app, dispatcher, updater, botStartTime, IGNORE_PENDING_REQUESTS, IS_VPS, PORT, alive, web, nox, OWNER_ID, AUTHORIZED_CHATS, LOGGER
+from bot import bot, app, dispatcher, updater, botStartTime, IGNORE_PENDING_REQUESTS, IS_VPS, PORT, alive, web, OWNER_ID, AUTHORIZED_CHATS, LOGGER
 from bot.helper.ext_utils import fs_utils
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, editMessage, sendLogFile
@@ -63,7 +63,7 @@ def stats(update, context):
 def start(update, context):
     buttons = button_build.ButtonMaker()
     buttons.buildbutton("Repo", "https://www.github.com/anasty17/mirror-leech-telegram-bot")
-    buttons.buildbutton("Owner", "https://t.me/anas_tayyar")
+    buttons.buildbutton("Report Group", "https://t.me/mltbbugsreport")
     reply_markup = InlineKeyboardMarkup(buttons.build_menu(2))
     if CustomFilters.authorized_user(update) or CustomFilters.authorized_chat(update):
         start_string = f'''
@@ -82,7 +82,6 @@ def restart(update, context):
     for proc in process.children(recursive=True):
         proc.kill()
     process.kill()
-    nox.kill()
     subprocess.run(["python3", "update.py"])
     # Save restart message object in order to reply to it after restarting
     with open(".restartmsg", "w") as f:
