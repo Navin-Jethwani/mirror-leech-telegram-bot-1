@@ -1,9 +1,8 @@
-import threading
-import re
-
+from threading import Thread
 from telegram.ext import CommandHandler, CallbackQueryHandler
 from telegram import InlineKeyboardMarkup
 from time import sleep
+from re import split as resplit
 
 from bot import DOWNLOAD_DIR, dispatcher, LOGGER
 from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, editMessage
@@ -44,7 +43,7 @@ def _watch(bot, update, isZip=False, isLeech=False, pswd=None, tag=None):
     if update.message.from_user.username:
         tag = f"@{update.message.from_user.username}"
     else:
-        tag = f'<a href="tg://user?id={update.message.from_user.id}">{update.message.from_user.first_name}</a>'
+        tag = update.message.from_user.mention_html(update.message.from_user.first_name)
 
     reply_to = update.message.reply_to_message
     if reply_to is not None:
@@ -52,7 +51,7 @@ def _watch(bot, update, isZip=False, isLeech=False, pswd=None, tag=None):
         if reply_to.from_user.username:
             tag = f"@{reply_to.from_user.username}"
         else:
-            tag = f'<a href="tg://user?id={reply_to.from_user.id}">{reply_to.from_user.first_name}</a>'
+            tag = reply_to.from_user.mention_html(reply_to.from_user.first_name)
 
     if not is_url(link):
         help_msg = "<b>Send link along with command line:</b>"
@@ -70,7 +69,8 @@ def _watch(bot, update, isZip=False, isLeech=False, pswd=None, tag=None):
     try:
         result = ydl.extractMetaData(link, name, True)
     except Exception as e:
-        return sendMessage(str(e), bot, update)
+        msg = str(e).replace('<', ' ').replace('>', ' ')
+        return sendMessage(tag + " " + msg, bot, update)
     if 'entries' in result:
         for i in ['144', '240', '360', '480', '720', '1080', '1440', '2160']:
             video_format = f"bv*[height<={i}][ext=mp4]+ba/b"
@@ -113,7 +113,7 @@ def _watch(bot, update, isZip=False, isLeech=False, pswd=None, tag=None):
 
             for forDict in formats_dict:
                 if len(formats_dict[forDict]) == 1:
-                    qual_fps_ext = re.split(r'p|-', forDict, maxsplit=2)
+                    qual_fps_ext = resplit(r'p|-', forDict, maxsplit=2)
                     height = qual_fps_ext[0]
                     fps = qual_fps_ext[1]
                     ext = qual_fps_ext[2]
@@ -134,13 +134,13 @@ def _watch(bot, update, isZip=False, isLeech=False, pswd=None, tag=None):
         listener_dict[msg_id] = [listener, user_id, link, name, YTBUTTONS, formats_dict]
         bmsg = sendMarkup('Choose Video Quality:', bot, update, YTBUTTONS)
 
-    threading.Thread(target=_auto_cancel, args=(bmsg, msg_id)).start()
+    Thread(target=_auto_cancel, args=(bmsg, msg_id)).start()
 
 def _qual_subbuttons(task_id, qual, msg):
     buttons = button_build.ButtonMaker()
     task_info = listener_dict[task_id]
     formats_dict = task_info[5]
-    qual_fps_ext = re.split(r'p|-', qual, maxsplit=2)
+    qual_fps_ext = resplit(r'p|-', qual, maxsplit=2)
     height = qual_fps_ext[0]
     fps = qual_fps_ext[1]
     ext = qual_fps_ext[2]
@@ -221,7 +221,7 @@ def select_format(update, context):
         else:
             playlist = False
         ydl = YoutubeDLHelper(listener)
-        threading.Thread(target=ydl.add_download, args=(link, f'{DOWNLOAD_DIR}{task_id}', name, qual, playlist)).start()
+        Thread(target=ydl.add_download, args=(link, f'{DOWNLOAD_DIR}{task_id}', name, qual, playlist)).start()
     del listener_dict[task_id]
     query.message.delete()
 

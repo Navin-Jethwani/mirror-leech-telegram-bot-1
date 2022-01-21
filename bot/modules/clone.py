@@ -3,7 +3,7 @@ import string
 
 from telegram.ext import CommandHandler
 
-from bot.helper.mirror_utils.upload_utils import gdriveTools
+from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, deleteMessage, delete_all_messages, update_all_messages, sendStatusMessage
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
@@ -22,13 +22,13 @@ def cloneNode(update, context):
         if update.message.from_user.username:
             tag = f"@{update.message.from_user.username}"
         else:
-            tag = f'<a href="tg://user?id={update.message.from_user.id}">{update.message.from_user.first_name}</a>'
+            tag = update.message.from_user.mention_html(update.message.from_user.first_name)
     elif reply_to is not None:
         link = reply_to.text
         if reply_to.from_user.username:
             tag = f"@{reply_to.from_user.username}"
         else:
-            tag = f'<a href="tg://user?id={reply_to.from_user.id}">{reply_to.from_user.first_name}</a>'
+            tag = reply_to.from_user.mention_html(reply_to.from_user.first_name)
     else:
         link = ''
     gdtot_link = is_gdtot_link(link)
@@ -41,7 +41,7 @@ def cloneNode(update, context):
             deleteMessage(context.bot, msg)
             return sendMessage(str(e), context.bot, update)
     if is_gdrive_link(link):
-        gd = gdriveTools.GoogleDriveHelper()
+        gd = GoogleDriveHelper()
         res, size, name, files = gd.helper(link)
         if res != "":
             return sendMessage(res, context.bot, update)
@@ -64,7 +64,7 @@ def cloneNode(update, context):
             result, button = gd.clone(link)
             deleteMessage(context.bot, msg)
         else:
-            drive = gdriveTools.GoogleDriveHelper(name)
+            drive = GoogleDriveHelper(name)
             gid = ''.join(random.SystemRandom().choices(string.ascii_letters + string.digits, k=12))
             clone_status = CloneStatus(drive, size, update, gid)
             with download_dict_lock:
